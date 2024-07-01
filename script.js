@@ -1,8 +1,12 @@
-let headlines = [];
-let tasks = [];
-let trashHeadlines = [];
-let trashTasks = [];
-let renderInput = `<div class="addSection">
+let allNotes = {
+  headlines: [],
+  tasks: [],
+  trashHeadlines: [],
+  trashTasks: [],
+};
+
+function renderInput() {
+  return `<div class="addSection">
   <input
     maxlength="30"
     type="text"
@@ -13,10 +17,11 @@ let renderInput = `<div class="addSection">
   <textarea placeholder="Notiz hinzufügen" name="" id="task"></textarea>
   <button onclick="addTask()">Hinzufügen</button>
 </div>`;
-let renderContent = `<div class="trashHeadline"><h2>Müll</h2> <button onclick="closeTrash()">X</button></div>`;
-
+}
+function renderContent() {
+  return `<div class="trashHeadline"><h2>Müll</h2> <button onclick="closeTrash()">X</button></div>`;
+}
 load();
-renderNote();
 
 function render() {
   let input = document.getElementById("content");
@@ -27,10 +32,10 @@ function render() {
   taskSection.innerHTML = "";
   trashSection.innerHTML = "";
 
-  trashSection.innerHTML = renderContent;
+  trashSection.innerHTML = renderContent();
 
   input.innerHTML = "";
-  input.innerHTML += renderInput;
+  input.innerHTML += renderInput();
   content.innerHTML += `<a onclick="showTrash()" id="trashButton" href="#">
       <img src="./img/trash.png" alt="Mülleimer"/>
     </a>`;
@@ -39,28 +44,32 @@ function render() {
   renderTrash();
 }
 
-function renderNote() {
-  let taskSection = document.getElementById("taskSection");
-  taskSection.innerHTML = "";
-  for (let i = tasks.length - 1; i >= 0; i--) {
-    const headline = headlines[i];
-    const task = tasks[i];
-    taskSection.innerHTML += `<div class="task">
+function renderNoteContent(headline, task, i) {
+  return `<div class="task">
       <div class="taskText">
         <b>${headline}</b> <br />
         ${task} <br />
       </div>
       <button onclick="deleteTask(${i})">In den Papierkorb</button>
     </div>`;
+}
+
+function renderNote() {
+  let taskSection = document.getElementById("taskSection");
+  taskSection.innerHTML = "";
+  for (let i = allNotes.tasks.length - 1; i >= 0; i--) {
+    const headline = allNotes.headlines[i];
+    const task = allNotes.tasks[i];
+    taskSection.innerHTML += renderNoteContent(headline, task, i);
   }
 }
 
 function renderTrash() {
   let trashSection = document.getElementById("trashSection");
-  trashSection.innerHTML = renderContent;
-  for (let i = 0; i < trashTasks.length; i++) {
-    const trashHeadline = trashHeadlines[i];
-    const trashTask = trashTasks[i];
+  trashSection.innerHTML = renderContent();
+  for (let i = 0; i < allNotes.trashTasks.length; i++) {
+    const trashHeadline = allNotes.trashHeadlines[i];
+    const trashTask = allNotes.trashTasks[i];
     trashSection.innerHTML += `<div class="trash">
       <div class="taskText">
         <b>${trashHeadline}</b> <br />
@@ -87,51 +96,51 @@ function addTask() {
     alert("Bitte Notiz Hinzufügen");
     return false;
   }
-  headlines.push(taskTitle.value);
-  tasks.push(task.value);
+  allNotes.headlines.push(taskTitle.value);
+  allNotes.tasks.push(task.value);
   render();
   save();
   return true;
 }
 
 function deleteTask(i) {
-  let trashHeadline = headlines.splice(i, 1)[0];
-  let trashTask = tasks.splice(i, 1)[0];
+  let trashHeadline = allNotes.headlines.splice(i, 1)[0];
+  let trashTask = allNotes.tasks.splice(i, 1)[0];
 
-  trashHeadlines.push(trashHeadline);
-  trashTasks.push(trashTask);
+  allNotes.trashHeadlines.push(trashHeadline);
+  allNotes.trashTasks.push(trashTask);
   render();
   save();
 }
 
 function deleteTrash(i) {
-  trashHeadlines.splice(i, 1);
-  trashTasks.splice(i, 1);
+  allNotes.trashHeadlines.splice(i, 1);
+  allNotes.trashTasks.splice(i, 1);
   render();
   save();
 }
 
 function restore(i) {
-  let restoredHeadline = trashHeadlines.splice(i, 1)[0];
-  let restoredTask = trashTasks.splice(i, 1)[0];
+  let restoredHeadline = allNotes.trashHeadlines.splice(i, 1)[0];
+  let restoredTask = allNotes.trashTasks.splice(i, 1)[0];
 
-  headlines.push(restoredHeadline);
-  tasks.push(restoredTask);
+  allNotes.headlines.push(restoredHeadline);
+  allNotes.tasks.push(restoredTask);
   render();
   save();
 }
 
 function save() {
-  let headlineAsText = JSON.stringify(headlines);
+  let headlineAsText = JSON.stringify(allNotes.headlines);
   localStorage.setItem("headlines", headlineAsText);
 
-  let taskAsText = JSON.stringify(tasks);
+  let taskAsText = JSON.stringify(allNotes.tasks);
   localStorage.setItem("tasks", taskAsText);
 
-  let trashHeadlineAsText = JSON.stringify(trashHeadlines);
+  let trashHeadlineAsText = JSON.stringify(allNotes.trashHeadlines);
   localStorage.setItem("trashHeadlines", trashHeadlineAsText);
 
-  let trashTaskAsText = JSON.stringify(trashTasks);
+  let trashTaskAsText = JSON.stringify(allNotes.trashTasks);
   localStorage.setItem("trashTasks", trashTaskAsText);
 }
 
@@ -149,14 +158,14 @@ function load() {
   let headlineAsText = localStorage.getItem("headlines");
   let taskAsText = localStorage.getItem("tasks");
   if (headlineAsText && taskAsText) {
-    headlines = JSON.parse(headlineAsText);
-    tasks = JSON.parse(taskAsText);
+    allNotes.headlines = JSON.parse(headlineAsText);
+    allNotes.tasks = JSON.parse(taskAsText);
   }
 
   let trashHeadlineAsText = localStorage.getItem("trashHeadlines");
   let trashTaskAsText = localStorage.getItem("trashTasks");
   if (trashHeadlineAsText && trashTaskAsText) {
-    trashHeadlines = JSON.parse(trashHeadlineAsText);
-    trashTasks = JSON.parse(trashTaskAsText);
+    allNotes.trashHeadlines = JSON.parse(trashHeadlineAsText);
+    allNotes.trashTasks = JSON.parse(trashTaskAsText);
   }
 }
